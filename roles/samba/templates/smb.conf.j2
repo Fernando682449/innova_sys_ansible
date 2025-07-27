@@ -1,0 +1,24 @@
+[global]
+   workgroup = WORKGROUP
+   server string = Servidor InnovaSys Samba
+   log file = /var/log/samba/log.%m
+   max log size = 1000
+   logging = file
+   panic action = /usr/share/samba/panic-action %d
+   server role = standalone server
+   obey pam restrictions = yes
+   unix password sync = yes
+   passwd program = /urs/bin/passwd %u
+   passwd chat = *Enter\snew\s*\spassword:* %n\n *Retype\snew\s*\spassword:* %n\n *password\supdated\ssuccessfully* .
+   pam password change = yes
+   map to guest = bad user
+
+[{{ samba_share_name}}]
+   path = {{ samba_share_path }}
+   browsable = yes 
+   writable = yes
+   guest ok = no
+   read only = no
+   create mask = 0660
+   directory mask = 0770
+   valid users = @{{ samba_group_name}}

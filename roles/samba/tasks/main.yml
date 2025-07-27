@@ -1,0 +1,49 @@
+---
+- name: Instalar Samba
+  ansible.builtin.apt:
+    name: samba
+    state: present
+    update_cache: yes
+
+- name: Crear grupo de desarrolladores
+  ansible.builtin.group:
+    name: "{{ samba_group_name }}"
+    state: present
+
+- name: Crear usuario de sistema para Samba sin shell
+  ansible.builtin.user:
+    name: "{{ samba_user_name }}"
+    state: present
+    groups: "{{ samba_group_name }}"
+    append: yes
+    shell: /usr/sbin/nologin
+    create_home: no
+
+- name: Crear directorio compartido de Samba
+  ansible.builtin.file:
+    path: "{{ samba_share_path }}"
+    state: directory
+    mode: '0770'
+    owner: root
+    group: "{{ samba_group_name }}"
+
+- name: Establecer contraseña de Samba para el usuario devuser1
+  ansible.builtin.shell: |
+    (echo '{{ samba_devuser_password }}'; echo '{{ samba_devuser_password }}') | smbpasswd -a -s devuser1
+  become: yes
+  no_log: true
+  register: smb_passwd_output
+  changed_when: "'Added user' in smb_passwd_output.stdout or 'Changed password' in smb_passwd_output.stdout"
+
+- name: Configurar Samba desde plantilla
+  ansible.builtin.template:
+    src: smb.conf.j2
+    dest: /etc/samba/smb.conf
+    mode: '0644'
+  notify: Reiniciar Samba
+
+- name: Asegurar que el servicio smbd este iniciado y habilitado
+  ansible.builtin.service:
+    name: smbd
+    state: started
+    enabled: yes

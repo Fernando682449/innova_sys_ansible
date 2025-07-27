@@ -1,0 +1,10 @@
+- name: Crear pagina personalizada desde plantilla Jinja2
+  ansible.builtin.template:
+    src: index.html.j2
+    dest: /var/www/html/index.html
+    owner: root
+    group: root
+    mode: '0644'
+  become: yes
+  notify: Reiniciar Apache
+
